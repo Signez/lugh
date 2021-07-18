@@ -6,31 +6,23 @@
     <div
       class="location-bar flex flex-row bg-indigo-800 items-center pl-4 pr-4 h-12 bz-right-15px mr-negative-15px"
     >
-      <input
-        class="flex-grow flex-shrink min-w-0 w-auto"
-        type="search"
-        placeholder="Search for a key…"
-        v-model="needle"
-      />
-      <IconSearch class="flex-none ml-2" />
-    </div>
-    <ul class="nav-translation-key-list">
-      <li
-        v-if="needle.length == 0 && namespace.length > 0"
-        class="nav-translation-key nav-back"
+      <div
+        v-if="namespace.length > 0"
+        class="nav-translation-key nav-back text-white"
       >
         <a href="#" @click.prevent="goToParentNamespace(namespace)">
-          <IconChevronRight />
           <span
             ><b>{{ namespace }}</b></span
           >
         </a>
-      </li>
+      </div>
+    </div>
+    <ul class="nav-translation-key-list">
       <template v-for="key in filteredTranslationsKeys" :key="key">
         <NavigationKey
           :canonicalKey="key"
           :namespace="namespace"
-          :forceCanonical="needle.length > 0"
+          :forceCanonical="false"
           @namespaceChanged="setNamespace(...arguments)"
         />
       </template>
@@ -39,19 +31,11 @@
 </template>
 
 <script>
-import { IconChevronRight, IconSearch } from "../assets/Icons.jsx";
-
 import NavigationKey from "./NavigationKey.vue";
 import _ from "lodash";
 
 export default {
   name: "navigation-bar",
-
-  data() {
-    return {
-      needle: "",
-    };
-  },
 
   props: {
     translationKeys: Array,
@@ -60,11 +44,7 @@ export default {
 
   computed: {
     filteredTranslationsKeys() {
-      if (this.$data.needle !== "") {
-        return this.foundTranslationKeys;
-      } else {
-        return this.currentNamespaceTranslationKeys;
-      }
+      return this.currentNamespaceTranslationKeys;
     },
 
     currentNamespaceTranslationKeys() {
@@ -93,12 +73,6 @@ export default {
 
       return _.uniq(truncated).sort();
     },
-
-    foundTranslationKeys() {
-      return _.filter(this.translationKeys, (key) => {
-        return key.includes(this.$data.needle);
-      }).sort();
-    },
   },
 
   methods: {
@@ -115,8 +89,6 @@ export default {
 
   components: {
     NavigationKey,
-    IconChevronRight,
-    IconSearch,
   },
 };
 </script>

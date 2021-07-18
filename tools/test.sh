@@ -1,6 +1,6 @@
 #!/bin/bash -ex
 
-if [ -z $TEST_DATABASE_URL ]; then
+if [ -z "$TEST_DATABASE_URL" ]; then
   echo "TEST_DATABASE_URL is not set. Aborting."
   echo "  Hint: You can set it to any local path; this script will create it there."
   echo "        e.g. `TEST_DATABASE_URL=test-database.sqlite make test`"
@@ -8,7 +8,7 @@ if [ -z $TEST_DATABASE_URL ]; then
 fi
 
 function teardown {
-  rm $TEST_DATABASE_URL
+  [ -f "$TEST_DATABASE_URL" ] && rm "$TEST_DATABASE_URL"
 }
 
 function teardown_on_error {

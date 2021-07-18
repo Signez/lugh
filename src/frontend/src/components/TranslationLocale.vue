@@ -1,11 +1,18 @@
 <template>
-  <div :class="['translation', { edited: modified }]" :t-id="translation.id">
-    <div class="translation-locale-label">
-      <span class="edited-bullet" v-if="modified">⚫</span>
+  <div
+    :class="[`translation flex`, { edited: modified }]"
+    :t-id="translation.id"
+  >
+    <div
+      class="translation-locale-label w-16 px-2 py-2 text-right font-mono text-sm font-bold"
+    >
       {{ translation.locale }}
     </div>
-    <div class="translation-editor">
+    <div class="translation-editor relative bg-white flex flex-col flex-grow">
       <textarea
+        :class="`flex-grow px-3 py-2 pb-6 text-sm outline-none transition-colors ${
+          modified ? 'bg-yellow-50' : ''
+        }`"
         :lang="translation.locale"
         v-model="localContent"
         ref="translationTextarea"
@@ -14,13 +21,37 @@
         @keyup.meta.enter="save"
       ></textarea>
       <transition name="hint-animation">
-        <span class="keyboard-hint" v-if="modified">
-          <b>Ctrl-Enter</b> saves your changes. <b>Escape</b> discards them.
+        <span
+          class="keyboard-hint font-light text-xs absolute bottom-0 pb-2 pl-3 text-yellow-800"
+          v-if="modified"
+        >
+          <span class="inline-block -ml-9 mr-6" v-if="modified">
+            <span
+              class="block w-3 h-3 bg-yellow-600 rounded-full animate-ping"
+            />
+          </span>
+          <b class="font-medium">Ctrl-Enter</b> saves your changes.
+          <b class="font-medium">Escape</b> discards them.
         </span>
       </transition>
       <transition name="hint-animation">
-        <span class="just-saved" v-if="justSaved">
-          <IconCheck /> Saved successfully!
+        <span
+          class="just-saved flex items-center font-light text-xs absolute bottom-0 pb-2 pl-3 text-green-400"
+          v-if="justSaved"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 mr-1"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <span> Saved successfully! </span>
         </span>
       </transition>
     </div>
@@ -28,8 +59,6 @@
 </template>
 
 <script>
-import { IconCheck } from "../assets/Icons.jsx";
-
 export default {
   name: "translation-locale",
 
@@ -64,10 +93,6 @@ export default {
     },
   },
 
-  components: {
-    IconCheck,
-  },
-
   methods: {
     revertOrBlur() {
       if (this.modified) {
@@ -93,6 +118,10 @@ export default {
     },
 
     save() {
+      // Save cursor position and selection before save
+      let start = this.$refs.translationTextarea.selectionStart;
+      let end = this.$refs.translationTextarea.selectionEnd;
+
       this.$root.$props.store
         .callApi("/api/v1/translations", "POST", {
           key: this.translationKey,
@@ -113,13 +142,48 @@ export default {
           // TODO: We should not refresh all locales here
           this.$root.$props.store.fetchTranslations();
 
+          // Restore cursor position and selection after revert
+          this.$nextTick(() => {
+            this.$refs.translationTextarea.selectionStart = start;
+            this.$refs.translationTextarea.selectionEnd = end;
+          });
+
           // Show a little confirmation that disappear after 2 seconds
           this.justSaved = true;
           window.setTimeout(() => {
             this.justSaved = false;
-          }, 2000);
+          }, 1000);
         });
     },
   },
 };
 </script>
+
+<style>
+.hint-animation-enter-active {
+  animation: 0.2s show-hint;
+}
+.hint-animation-leave-active {
+  animation: 0.2s hide-hint;
+}
+@keyframes show-hint {
+  0% {
+    transform: translateY(1.2em) scaleY(0);
+    opacity: 0;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes hide-hint {
+  100% {
+    transform: translateY(-1.2em) scaleY(0);
+    opacity: 0;
+  }
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+}
+</style>

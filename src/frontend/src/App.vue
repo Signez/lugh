@@ -114,7 +114,9 @@ export default {
 
   methods: {
     updateNamespace(namespace) {
-      window.location.hash = namespace;
+      if (namespace?.length) {
+        window.location.hash = namespace;
+      }
     },
 
     didLogIn(token, userId, expiredAt) {
